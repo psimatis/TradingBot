@@ -25,7 +25,7 @@ else:
 
 ###### Parameters #######
 base = 'BTC' # coin
-quote = 'BUSD' # stablecoin
+quote = 'TUSD' # stablecoin
 pair = base + quote # trading pair
 interval = int(sys.argv[1]) # frequency of price check
 diff = float(sys.argv[2]) # price difference threshold for order execution
@@ -64,18 +64,16 @@ def getBalance():
 
 # Buy when the price stops dropping
 def buy(prevPrice):
-    print('Ready to buy...')
     while getPrice() < prevPrice:
-        time.sleep(interval)
         prevPrice = getPrice()
+        time.sleep(interval)
     print('Buy order:', makeOrder('BUY'))
         
 # Sell when the price stops growing
 def sell(prevPrice):
-    print('Ready to sell...')
     while getPrice() > prevPrice:
-        time.sleep(interval)
         prevPrice = getPrice()
+        time.sleep(interval)
     print('Sell order:', makeOrder('SELL'))    
 
 # Execute a market order
@@ -88,15 +86,14 @@ def makeOrder(s):
     else:
         order = client.create_order(symbol = pair, side = s, type = 'MARKET', quantity = quoteAmount)
 
-    print('Ref price test check:', float(order['fills'][0]['price']))
     global refPrice
     refPrice = float(order['fills'][0]['price'])
     return order
 
 # Returns current state
 def stats():
-    s = 'Profit: ' + str(round(initBalance - getBalance(), 2))
-    s += ' | Current: ' + str(currPrice)
+    s = 'Profit: ' + str(round(getBalance() - initBalance, 2))
+    s += ' | Current: ' + str(price)
     s += ' | Reference: ' + str(refPrice)
     s += ' | ' + nextOrder + ' on '
     if nextOrder == 'SELL':
@@ -109,25 +106,25 @@ def stats():
 ###### Trading algo #######
 initBalance = getBalance()
 refPrice = getPrice()
-currPrice = getPrice()
+# price = getPrice()
 
 while True:
             
-    currPrice = getPrice()
+    price = getPrice()
     
     # buy crypto
-    if currPrice <= refPrice / diff and nextOrder == 'BUY':
-        buy(currPrice)
+    if price <= refPrice / diff and nextOrder == 'BUY':
+        buy(price)
         nextOrder = 'SELL'
         
     # sell crypto
-    elif currPrice >= refPrice * diff and nextOrder == 'SELL':
-        sell(currPrice)
+    elif price >= refPrice * diff and nextOrder == 'SELL':
+        sell(price)
         nextOrder = 'BUY'
         
     # raise reference price in bull runs
-    elif currPrice > refPrice and nextOrder == 'BUY':
-        refPrice = currPrice
+    elif price > refPrice and nextOrder == 'BUY':
+        refPrice = price
 
     print(stats(), end='\r')
     
